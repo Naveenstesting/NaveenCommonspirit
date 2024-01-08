@@ -1,0 +1,266 @@
+{
+	"info": {
+		"_postman_id": "8b0a4c74-c631-496a-af73-64d28a886487",
+		"name": "GeolocationAPI",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Service Token Copy",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set('consumerApp',13);\r",
+							"pm.collectionVariables.set('providerApp',13);"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"var jsonData = pm.response.json();\r",
+							"\r",
+							"pm.collectionVariables.set('serviceToken',jsonData.accessToken);\r",
+							"\r",
+							"pm.test(\"API to generate service token\", function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});"
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{serviceTokenUrl}}Token/get-token-by-source-dest?sourceApplicationId={{consumerApp}}&destinationApplicationId={{providerApp}}",
+					"host": [
+						"{{serviceTokenUrl}}Token"
+					],
+					"path": [
+						"get-token-by-source-dest"
+					],
+					"query": [
+						{
+							"key": "sourceApplicationId",
+							"value": "{{consumerApp}}"
+						},
+						{
+							"key": "destinationApplicationId",
+							"value": "{{providerApp}}"
+						}
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Geo Location API",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"exec": [
+							"pm.collectionVariables.set(\"ip\",\"103.223.11.10\");\r",
+							"//console.log(pm.environment.get(\"baseurl\"));\r",
+							"if(pm.environment.get(\"baseurl\")===\"https://apim.qa1.dignityhealthppe.org/geolocation/\"){\r",
+							"\r",
+							"pm.request.headers.add({\r",
+							"    'key':'Ocp-Apim-Subscription-Key',\r",
+							"    'value':'cfcf42fd61f54717870537a867791ab3'\r",
+							"});\r",
+							"pm.request.headers.add({\r",
+							"    'key':'Ocp-Apim-Trace',\r",
+							"    'value':'true'\r",
+							"});\r",
+							"} else if(pm.environment.get(\"baseurl\")===\"https://apim.dev.dignityhealthppe.org/geolocation/\"){\r",
+							"\r",
+							"pm.request.headers.add({\r",
+							"    'key':'Ocp-Apim-Subscription-Key',\r",
+							"    'value':'722fce6d69044acd9f59ff6992832141'\r",
+							"});\r",
+							"pm.request.headers.add({\r",
+							"    'key':'Ocp-Apim-Trace',\r",
+							"    'value':'true'\r",
+							"});\r",
+							"}\r",
+							"\r",
+							"else if(pm.environment.get(\"baseurl\")===\"https://apim.dignityhealthstg.org/geolocation/\"){\r",
+							"\r",
+							"pm.request.headers.add({\r",
+							"    'key':'Ocp-Apim-Subscription-Key',\r",
+							"    'value':'2014b854f7154eefa9bc91bbd7d01935'\r",
+							"});\r",
+							"pm.request.headers.add({\r",
+							"    'key':'Ocp-Apim-Trace',\r",
+							"    'value':'true'\r",
+							"});\r",
+							"}"
+						],
+						"type": "text/javascript"
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"\r",
+							"\r",
+							"if(pm.response.code == 200){\r",
+							"    var jsonData = pm.response.json();\r",
+							"\tif(jsonData.result.countryName=='India'){\r",
+							"\t\tpm.test(\"Test case ID: 226295 IP address from India should return null values for each field except IP,country name and country code\",function(){\r",
+							"            /* 1. */ pm.expect(jsonData.result.city).to.be.null;\r",
+							"            /* 1. */pm.expect(jsonData.result.regionName).to.be.null;\r",
+							"            /* 1. */pm.expect(jsonData.result.regionCode).to.be.null;\r",
+							"            /* 1. */pm.expect(jsonData.result.postal).to.be.null;\r",
+							"            /* 1. */pm.expect(jsonData.result.latitude).to.be.null;\r",
+							"            /* 1. */pm.expect(jsonData.result.longitude).to.be.null;\r",
+							"            /* 1. */pm.expect(jsonData.result.timeZone).to.be.null;\r",
+							"            /* 1. */pm.expect(jsonData.result.accuracy).to.be.null;\r",
+							"\t\t    });\r",
+							"\t}\r",
+							"\telse{\r",
+							"   pm.test(\"Test Case ID: 224234, Geo location API execution status have response code \"+pm.response.code, function () {\r",
+							"    pm.response.to.have.status(200);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Test Case ID: 224234 API response time is \"+pm.response.responseTime, function () {\r",
+							"    pm.expect(pm.response.responseTime).to.be.below(5000);\r",
+							"});\r",
+							"\r",
+							"pm.test(\"Test Case ID: 224234 isValid parameter response is \"+jsonData.isValid,function(){\r",
+							"pm.expect(jsonData.isValid).to.eql(true)\r",
+							"});\r",
+							"\r",
+							"if(jsonData.errors = []){\r",
+							"pm.test(\"Test Case ID: 224234 No error messages \"+jsonData.errors);\r",
+							"} else{\r",
+							"   pm.test(\"Following error occured with error code \"+jsonData.errors[0].code); \r",
+							"}\r",
+							"\r",
+							"if(jsonData.warnings = []){\r",
+							"pm.test(\"Test Case ID: 224234 No warning messages \"+jsonData.warnings);\r",
+							"} else{\r",
+							"   pm.test(\"Following warnings occured with warning code \"+jsonData.warnings[0].code); \r",
+							"}\r",
+							"\r",
+							"}}\r",
+							"else if(pm.response.code == 401){\r",
+							"    pm.test(\"Test Case ID: 224237, the API failed due to authorization token is not from geolocation API\",function(){\r",
+							"        pm.expect(pm.response.code).to.be.eql(401);\r",
+							"    });\r",
+							"}\r",
+							"else if(pm.response.code == 400){\r",
+							"    var jsonData = pm.response.json();\r",
+							"    pm.test(\"Test Case ID: 217172, Not an IP address\",function(){\r",
+							"        pm.expect(pm.response.code).to.be.eql(400);\r",
+							"    });\r",
+							"}\r",
+							"else if(pm.response.code == 403){\r",
+							"    pm.test(\"Test Case ID: 224237, The token generated is not allowed\",function(){\r",
+							"        pm.expect(pm.response.code).to.be.eql(403);\r",
+							"    });\r",
+							"}\r",
+							"else if(pm.response.code == 404){\r",
+							"    pm.test(\"Test case ID: 224238, Valid IP but unable to find data\",function(){\r",
+							"        pm.expect(pm.response.code).to.be.eql(404);\r",
+							"    });\r",
+							"}\r",
+							"else if(pm.response.code ==500){\r",
+							"    pm.test(\"API execution failed\",function(){\r",
+							"        pm.expect(pm.response.code).to.be.eql(200);\r",
+							"});\r",
+							"}\r",
+							"\r",
+							""
+						],
+						"type": "text/javascript"
+					}
+				}
+			],
+			"request": {
+				"auth": {
+					"type": "bearer",
+					"bearer": [
+						{
+							"key": "token",
+							"value": "{{serviceToken}}",
+							"type": "string"
+						}
+					]
+				},
+				"method": "GET",
+				"header": [
+					{
+						"key": "",
+						"value": "",
+						"type": "text",
+						"disabled": true
+					}
+				],
+				"url": {
+					"raw": "{{baseurl}}v1/geolocation?ipAddress={{ip}}",
+					"host": [
+						"{{baseurl}}v1"
+					],
+					"path": [
+						"geolocation"
+					],
+					"query": [
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						},
+						{
+							"key": "ipAddress",
+							"value": "{{ip}}"
+						},
+						{
+							"key": "",
+							"value": null,
+							"disabled": true
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	],
+	"variable": [
+		{
+			"key": "ciamAppointmentId",
+			"value": ""
+		},
+		{
+			"key": "consumerApplication",
+			"value": ""
+		},
+		{
+			"key": "providerApplication",
+			"value": ""
+		},
+		{
+			"key": "serviceToken",
+			"value": ""
+		},
+		{
+			"key": "consumerApp",
+			"value": ""
+		},
+		{
+			"key": "providerApp",
+			"value": ""
+		},
+		{
+			"key": "ip",
+			"value": ""
+		}
+	]
+}
